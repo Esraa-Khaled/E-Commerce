@@ -27,8 +27,8 @@ The main objectives of this project are:
 ## Database Design
 
 ### 1- Entities
-- customer :
-- category :
-- product :
-- order :
-- order_Details :
+- Customer : Represents registered users who can browse products and place orders.
+- Category : Organizes products into categories and subcategories.
+- Product : Represents items available for sale in the e-commerce store.
+- Order : Represents a customer's purchase transaction, including ordered products, quantities, and total cost.
+- Order Details : To store detailed information about customer orders
