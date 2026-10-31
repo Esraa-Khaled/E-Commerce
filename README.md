@@ -23,3 +23,12 @@ The main objectives of this project are:
 
 - **Database:** PostgreSQL
 - **Language:** SQL
+
+## Database Design
+
+### 1- Entities
+- customer :
+- category :
+- product :
+- order :
+- order_Details :
