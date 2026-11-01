@@ -34,6 +34,17 @@ The main objectives of this project are:
 - `ORDER_DETAILS`: Stores the products included in each order.
 ____
 
+### Relationships Between Entities
+
+- CUSTOMER (1) → (M) ORDERS
+- CATEGORY (1) → (M) PRODUCT
+- ORDERS (1) → (M) ORDER_DETAILS
+- PRODUCT (1) → (M) ORDER_DETAILS
+
+> ORDER_DETAILS acts as an associative entity resolving the many-to-many relationship between ORDERS and PRODUCT.
+
+___
+
 ### DB Schema Script
 
 #### - Create the database schema
@@ -157,7 +168,7 @@ CREATE TABLE IF NOT EXISTS ORDER_DETAILS (
 ```
 ___
 
-### Design decisions Notes:
+### Design decisions Notes
 - NUMERIC(10,2) is appropriate for monetary values because it avoids floating-point rounding errors.
 - unit_price stores the product price at the time of purchase. If the product price changes later, historical orders remain correct.
 - total_amount is stored in orders as an order-level total. It should be calculated from the order details and maintained consistently.
@@ -182,3 +193,46 @@ CREATE INDEX idx_order_details_order
 CREATE INDEX idx_order_details_product
     ON order_details(product_id);
 ```
+____
+
+### ERD Diagram
+
+___
+
+### Reports
+
+#### 1. Daily Revenue Report
+Requirement: Write an SQL query to generate a daily report of the total revenue for a specific date. 
+```
+SELECT SUM(total_amount) AS total_revenue
+FROM ORDERS
+WHERE order_date = :date;
+```
+
+#### 2. Monthly Top-Selling Products
+Requirement: Write an SQL query to generate a monthly report of the top-selling products in a given month. 
+```
+SELECT p.product_id, p.name As product_name,
+    SUM(d.quantity) As total_quantity,
+    SUM(d.quantity * d.unit_price) As total_price
+FROM product p
+LEFT JOIN order_details d ON d.product_id = p.product_id 
+LEFT JOIN orders o ON o.order_id = d.order_id
+WHERE o.order_date >= :date_before AND o.order_Date < :date_after
+GROUP BY p.product_id, p.name
+ORDER BY total_quantity DESC;
+```
+
+#### 3. Customers with More Than $500 in Orders During the Past Month
+Requirement: Write a SQL query to retrieve a list of customers who have placed orders totaling more than $500 in the past month.
+Include customer names and their total order amounts.
+
+```
+```
+
+
+___
+
+### Denormalization
+
+___
