@@ -164,4 +164,21 @@ ___
 - password should contain a securely hashed password, never a plaintext password.
 
 ___
-### 
+### Recommended indexes
+
+```
+CREATE INDEX idx_product_category
+    ON product(category_id);
+
+CREATE INDEX idx_orders_customer
+    ON orders(customer_id);
+
+CREATE INDEX idx_orders_order_date
+    ON orders(order_date);
+
+CREATE INDEX idx_order_details_order
+    ON order_details(order_id);
+
+CREATE INDEX idx_order_details_product
+    ON order_details(product_id);
+```
