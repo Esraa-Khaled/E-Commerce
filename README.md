@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS ORDER_DETAILS (
 ```
 ___
 
-### Design decisions Notes
+### Design Decisions Notes
 - NUMERIC(10,2) is appropriate for monetary values because it avoids floating-point rounding errors.
 - unit_price stores the product price at the time of purchase. If the product price changes later, historical orders remain correct.
 - total_amount is stored in orders as an order-level total. It should be calculated from the order details and maintained consistently.
@@ -193,13 +193,13 @@ CREATE INDEX idx_order_details_product
 ```
 ____
 
-### ERD Diagram
+## ERD Diagram
 
 <img width="1151" height="512" alt="e_commerce_erd" src="https://github.com/user-attachments/assets/5a1c3913-a605-4d33-8886-fe88de1e3ad0" />
 
 ___
 
-### Reports
+## Reports
 
 #### 1. Daily Revenue Report
 Requirement: Write an SQL query to generate a daily report of the total revenue for a specific date. 
@@ -251,7 +251,7 @@ ORDER BY total_orders_amount DESC;
 
 ___
 
-### Denormalization
+## Denormalization
 
 Denormalization is the process of combining or duplicating data across tables to simplify queries and improve read performance. Instead of storing each piece of data in a single location, denormalized databases allow the same data to appear in multiple places. This reduces the need for joins when retrieving data, which can improve query speed in read-heavy workloads.
 
@@ -288,7 +288,7 @@ Disadvantages:
 - We need to update the repeated or calculated values whenever the original data changes.
 ___
 
-### Future Improvments
+## Future Improvments
 
 - Payment Management: Add a PAYMENT table to store payment methods, payment status, and transaction details.
 - Shipping Information: Store customer shipping addresses and delivery information.
