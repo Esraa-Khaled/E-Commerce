@@ -246,4 +246,8 @@ ___
 
 ### Denormalization
 
+> How we can apply a denormalization mechanism on customer and order entities
+
+For order entity we can combine order_details info in order_table
+For customer add the number of orders and the orders
 ___
