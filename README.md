@@ -204,26 +204,30 @@ ___
 #### 1. Daily Revenue Report
 Requirement: Write an SQL query to generate a daily report of the total revenue for a specific date. 
 ```
-SELECT SUM(total_amount) AS total_revenue
-FROM ORDERS
-WHERE order_date = :date;
+SELECT
+    COALESCE(SUM(total_amount), 0) AS total_revenue
+FROM orders
+WHERE order_date >= :start_date
+  AND order_date < :end_date;
 ```
 
 #### 2. Monthly Top-Selling Products
 Requirement: Write an SQL query to generate a monthly report of the top-selling products in a given month. 
 ```
-SELECT p.product_id,
-    p.name As product_name,
-    SUM(d.quantity) As total_quantity,
-    SUM(d.quantity * d.unit_price) As total_price
+SELECT
+    p.product_id,
+    p.name AS product_name,
+    SUM(d.quantity) AS total_quantity,
+    SUM(d.quantity * d.unit_price) AS total_revenue
 FROM product p
-LEFT JOIN order_details d
-    ON d.product_id = p.product_id 
-LEFT JOIN orders o
+JOIN order_details d
+    ON d.product_id = p.product_id
+JOIN orders o
     ON o.order_id = d.order_id
-WHERE o.order_date >= :date_before AND o.order_date < :date_after
+WHERE o.order_date >= :date_before
+  AND o.order_date < :date_after
 GROUP BY p.product_id, p.name
-ORDER BY total_quantity DESC;
+ORDER BY total_quantity DESC
 ```
 
 #### 3. Customers with More Than $500 in Orders During the Past Month
@@ -231,15 +235,16 @@ Requirement: Write a SQL query to retrieve a list of customers who have placed o
 Include customer names and their total order amounts.
 
 ```
-SELECT c.customer_id,
-    CONCAT(c.first_name,' ', c.last_name) As customer_name,
-    SUM(o.total_amount) As total_orders_amount
+SELECT
+    c.customer_id,
+    CONCAT(c.first_name, ' ', c.last_name) AS customer_name,
+    SUM(o.total_amount) AS total_orders_amount
 FROM customer c
-LEFT JOIN orders o
+JOIN orders o
     ON o.customer_id = c.customer_id
-WHERE o.order_date <= CURRENT_TIMESTAMP 
-    AND  o.order_date >= CURRENT_TIMESTAMP - INTERVAL '1 month'
-GROUP BY c.customer_id, customer_name
+WHERE o.order_date >= CURRENT_TIMESTAMP - INTERVAL '1 month'
+  AND o.order_date <= CURRENT_TIMESTAMP
+GROUP BY c.customer_id, c.first_name, c.last_name
 HAVING SUM(o.total_amount) > 500
 ORDER BY total_orders_amount DESC;
 ```
@@ -248,8 +253,44 @@ ___
 
 ### Denormalization
 
-> How we can apply a denormalization mechanism on customer and order entities
+Denormalization is the process of combining or duplicating data across tables to simplify queries and improve read performance. Instead of storing each piece of data in a single location, denormalized databases allow the same data to appear in multiple places. This reduces the need for joins when retrieving data, which can improve query speed in read-heavy workloads.
 
-For order entity we can combine order_details info in order_table
+> How we can apply a denormalization mechanism on customer and order entities?
+> 
+For order entity we can combine order_details info in order_table-
 For customer add the number of orders and the orders
+
+1. Customer Table
+
+We can add:
+
+- total_orders: The total number of orders placed by the customer.
+- total_spent: The total amount spent by the customer.
+
+This avoids calculating these values from the ORDERS table every time we need to display customer information.
+
+2. Orders Table
+
+We can add:
+
+- customer info like >> customer_name: Stores the customer's name when the order is placed.
+- order_details like >> total_items: Stores the total number of products in the order.
+
+This reduces the need to join the CUSTOMER table to get customer information and the ORDER_DETAILS table to calculate the total number of items.
+
+Benefits:
+- Reduces the number of JOIN operations.
+- Makes some queries simpler and faster.
+- Makes it easier to display customer and order summary reports.
+
+Disadvantages:
+- Some data will be stored more than once.
+- We need to update the repeated or calculated values whenever the original data changes.
 ___
+
+### Future Improvments
+
+- Payment Management: Add a PAYMENT table to store payment methods, payment status, and transaction details.
+- Shipping Information: Store customer shipping addresses and delivery information.
+- Product Reviews: Allow customers to rate and review purchased products.
+- Discounts and Coupons: Add support for product discounts and promotional codes.
