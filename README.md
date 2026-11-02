@@ -154,13 +154,11 @@ CREATE TABLE IF NOT EXISTS ORDER_DETAILS (
 
     CONSTRAINT order_details_order_fk
         FOREIGN KEY (order_id)
-        REFERENCES ORDERS(order_id)
-        ON DELETE CASCADE,
+        REFERENCES ORDERS(order_id),
 
     CONSTRAINT order_details_product_fk
         FOREIGN KEY (product_id)
-        REFERENCES PRODUCT(product_id)
-        ON DELETE RESTRICT,
+        REFERENCES PRODUCT(product_id),
 
     CONSTRAINT order_product_uq UNIQUE (order_id, product_id)
 );
@@ -212,13 +210,16 @@ WHERE order_date = :date;
 #### 2. Monthly Top-Selling Products
 Requirement: Write an SQL query to generate a monthly report of the top-selling products in a given month. 
 ```
-SELECT p.product_id, p.name As product_name,
+SELECT p.product_id,
+    p.name As product_name,
     SUM(d.quantity) As total_quantity,
     SUM(d.quantity * d.unit_price) As total_price
 FROM product p
-LEFT JOIN order_details d ON d.product_id = p.product_id 
-LEFT JOIN orders o ON o.order_id = d.order_id
-WHERE o.order_date >= :date_before AND o.order_Date < :date_after
+LEFT JOIN order_details d
+    ON d.product_id = p.product_id 
+LEFT JOIN orders o
+    ON o.order_id = d.order_id
+WHERE o.order_date >= :date_before AND o.order_date < :date_after
 GROUP BY p.product_id, p.name
 ORDER BY total_quantity DESC;
 ```
@@ -228,8 +229,18 @@ Requirement: Write a SQL query to retrieve a list of customers who have placed o
 Include customer names and their total order amounts.
 
 ```
+SELECT c.customer_id,
+    CONCAT(c.first_name,' ', c.last_name) As customer_name,
+    SUM(o.total_amount) As total_orders_amount
+FROM customer c
+LEFT JOIN orders o
+    ON o.customer_id = c.customer_id
+WHERE o.order_date <= CURRENT_TIMESTAMP 
+    AND  o.order_date >= CURRENT_TIMESTAMP - INTERVAL '1 month'
+GROUP BY c.customer_id, customer_name
+HAVING SUM(o.total_amount) > 500
+ORDER BY total_orders_amount DESC;
 ```
-
 
 ___
 
