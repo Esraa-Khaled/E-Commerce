@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS CUSTOMER (
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255),
+    password VARCHAR(255) NOT NULL,
 
     CONSTRAINT customer_pk PRIMARY KEY (customer_id)
 );
@@ -194,6 +194,8 @@ CREATE INDEX idx_order_details_product
 ____
 
 ### ERD Diagram
+
+<img width="1151" height="512" alt="e_commerce_erd" src="https://github.com/user-attachments/assets/5a1c3913-a605-4d33-8886-fe88de1e3ad0" />
 
 ___
 
