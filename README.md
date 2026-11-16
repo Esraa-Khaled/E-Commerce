@@ -304,32 +304,37 @@ ADD CONSTRAINT fk_product_vendor
 #### Popular Product Query:
 ```
 SELECT
-    p.product_id,
-    p.name,
-    p.price,
+    recommended_product.product_id,
+    recommended_product.name,
+    recommended_product.price,
     COALESCE(SUM(od.quantity), 0) AS total_sold
-FROM product curPro
-JOIN product p
-    ON p.category_id = curPro.category_id
-   AND p.vendor_id = curPro.vendor_id
-   AND p.product_id <> curPro.product_id
+FROM product original_product
+JOIN product recommended_product
+    ON recommended_product.category_id = original_product.category_id
+   AND recommended_product.vendor_id = original_product.vendor_id
+   AND recommended_product.product_id <> original_product.product_id
 LEFT JOIN order_details od
-    ON od.product_id = p.product_id
-WHERE curPro.product_id = :purchased_product_id
-  AND p.stock_quantity > 0
-GROUP BY p.product_id, p.name, p.price
-ORDER BY total_sold DESC, p.product_id
+    ON od.product_id = recommended_product.product_id
+WHERE original_product.product_id = :purchased_product_id
+  AND recommended_product.stock_quantity > 0
+GROUP BY
+    recommended_product.product_id,
+    recommended_product.name,
+    recommended_product.price
+ORDER BY
+    total_sold DESC,
+    recommended_product.product_id
 LIMIT 10;
 ```
 
 #### Notes:
 - To recommend products from the same vendor instead of the same brand, replace:
 
-```AND p.brand_id = curPro.brand_id```
+```AND recommended_product.brand_id = original_product.brand_id```
 
 with:
 
-```AND p.vendor_id = curPro.vendor_id```
+```AND recommended_product.vendor_id = original_product.vendor_id```
 
 To require both the same brand and vendor, include both conditions.
 
@@ -342,10 +347,10 @@ If you want to recommend only products that the customer has never purchased bef
 AND NOT EXISTS (
     SELECT 1
     FROM orders o
-    JOIN order_details prev_od
-        ON prev_od.order_id = o.order_id
+    JOIN order_details previous_order_detail
+        ON previous_order_detail.order_id = o.order_id
     WHERE o.customer_id = :customer_id
-      AND prev_od.product_id = p.product_id
+      AND previous_order_detail.product_id = recommended_product.product_id
 )
 ```
 
