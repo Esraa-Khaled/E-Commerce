@@ -311,7 +311,7 @@ SELECT
 FROM product original_product
 JOIN product recommended_product
     ON recommended_product.category_id = original_product.category_id
-   AND recommended_product.vendor_id = original_product.vendor_id
+   AND AND recommended_product.brand_id = original_product.brand_id
    AND recommended_product.product_id <> original_product.product_id
 LEFT JOIN order_details od
     ON od.product_id = recommended_product.product_id
