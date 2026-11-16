@@ -267,6 +267,96 @@ FROM product
 WHERE name ILIKE '%camera%'
    OR description ILIKE '%camera%';
 ```
+
+#### 5. Can you design a query to suggest popular products in the same category for the same brand/vendor, excluding the Purchased product from the recommendations?
+
+As the current database schema doesn't have brand or vendor references, we need to create these tables first and reference them from the PRODUCT table.
+
+##### Brand and Vendor Concepts:
+
+**Brand**: The company or label that manufactures or markets a product, such as `Active`, `Zara`, `Calvin Klein`, `MAC`, or `Maybelline`.
+
+**Vendor**: The seller or supplier offering the product in the store.
+
+A brand can have multiple vendors, and a vendor can sell products from multiple brands.
+
+##### Create Brand and Vendor Tables:
+```
+CREATE TABLE brand (
+    brand_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(150) NOT NULL UNIQUE
+);
+
+CREATE TABLE vendor (
+    vendor_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(150) NOT NULL UNIQUE
+);
+```
+```
+ALTER TABLE product
+ADD COLUMN brand_id BIGINT,
+ADD COLUMN vendor_id BIGINT,
+ADD CONSTRAINT fk_product_brand
+    FOREIGN KEY (brand_id) REFERENCES brand(brand_id),
+ADD CONSTRAINT fk_product_vendor
+    FOREIGN KEY (vendor_id) REFERENCES vendor(vendor_id);
+```
+#### Popular Product Query:
+```
+SELECT
+    p.product_id,
+    p.name,
+    p.price,
+    COALESCE(SUM(od.quantity), 0) AS total_sold
+FROM product curPro
+JOIN product p
+    ON p.category_id = curPro.category_id
+   AND p.vendor_id = curPro.vendor_id
+   AND p.product_id <> curPro.product_id
+LEFT JOIN order_details od
+    ON od.product_id = p.product_id
+WHERE curPro.product_id = :purchased_product_id
+  AND p.stock_quantity > 0
+GROUP BY p.product_id, p.name, p.price
+ORDER BY total_sold DESC, p.product_id
+LIMIT 10;
+```
+
+#### Notes:
+- To recommend products from the same vendor instead of the same brand, replace:
+
+```AND p.brand_id = curPro.brand_id```
+
+with:
+
+```AND p.vendor_id = curPro.vendor_id```
+
+To require both the same brand and vendor, include both conditions.
+
+
+- To exclude Previously Purchased Products
+
+If you want to recommend only products that the customer has never purchased before, add the following condition to the WHERE clause:
+
+```
+AND NOT EXISTS (
+    SELECT 1
+    FROM orders o
+    JOIN order_details prev_od
+        ON prev_od.order_id = o.order_id
+    WHERE o.customer_id = :customer_id
+      AND prev_od.product_id = p.product_id
+)
+```
+
+This checks the customer's order history and excludes products they have already purchased.
+
+- **Without NOT EXISTS:** Previously purchased products can still appear in recommendations.
+
+- **With NOT EXISTS:** Only products the customer has never purchased are recommended.
+
+This enhancement is optional and depends on the desired recommendation behavior.
+
 ___
 
 ## Denormalization
