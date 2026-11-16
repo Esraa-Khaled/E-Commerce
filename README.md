@@ -249,6 +249,24 @@ HAVING SUM(o.total_amount) > 500
 ORDER BY total_orders_amount DESC;
 ```
 
+#### 4. Write a SQL query to search for all products with the word "camera" in either the product name or description.
+```
+SELECT product_id, name, description, price, stock_quantity
+FROM product
+WHERE lower(name) LIKE '%camera%'
+   OR lower(description) LIKE '%camera%';
+```
+Notes
+- lower() makes the search case-insensitive, so "Camera", "CAMERA" and "camera" all match.
+- % is a wildcard, so the query also matches words that contain "camera", such as "cameras" or "webcamera".
+- If description is NULL, the product can still match through its name, because a NULL comparison is treated as false and the OR handles the rest.
+- lower() + LIKE is portable across PostgreSQL, MySQL, SQL Server and Oracle. In PostgreSQL only, the shorter ILIKE gives the same result:
+```
+SELECT product_id, name, description, price, stock_quantity
+FROM product
+WHERE name ILIKE '%camera%'
+   OR description ILIKE '%camera%';
+```
 ___
 
 ## Denormalization
